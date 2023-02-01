@@ -64,7 +64,7 @@ jobs:
             aio config:set cloudmanager_environmentid 923606
             
             ALL_FILE=$(ls all/target/ | grep zip ) aio aem:rde:install -t content-package "all/target/${ALL_FILE}"
-            DISP_FILE=$(shell ls dispatcher/target/ | grep zip ) aio aem:rde:install -t dispatcher-config "dispatcher/target/${DISP_FILE}"
+            DISP_FILE=$(ls dispatcher/target/ | grep zip ) aio aem:rde:install -t dispatcher-config "dispatcher/target/${DISP_FILE}"
 
       - run:
           name: "Run Integration Tests"

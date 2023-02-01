@@ -42,14 +42,28 @@ jobs:
 #          command: |
 #                @aio aem:rde:reset
 
+      - restore_cache:
+          keys:
+            - maven
+
       - run:
           name: "build project"
           command: |
             mvn clean package
 
+      - save_cache:
+          key: maven
+          paths:
+            - .m2/repository/
+
+
       - run:
           name: "install on RDE"
           command: |
+            aio config:set cloudmanager_orgid  "${SERVICE_ACCOUNT_ORG_ID}"
+            aio config:set cloudmanager_programid 100060 
+            aio config:set cloudmanager_environmentid 923606
+            
             ALL_FILE=$(ls all/target/ | grep zip ) aio aem:rde:install -t content-package "all/target/${ALL_FILE}"
             DISP_FILE=$(shell ls dispatcher/target/ | grep zip ) aio aem:rde:install -t dispatcher-config "dispatcher/target/${DISP_FILE}"
 

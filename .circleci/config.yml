@@ -27,14 +27,14 @@ jobs:
           command: |
             echo "${SERVICE_ACCOUNT_PRIVATE_KEY_B64}" | base64 -d > private.key
             
-            aio config:set ims.contexts.cli.client_id "${SERVICE_ACCOUNT_CLIENT_ID}"
-            aio config:set ims.contexts.cli.client_secret "${SERVICE_ACCOUNT_CLIENT_SECRET}"
-            aio config:set ims.contexts.cli.technical_account_id "${SERVICE_ACCOUNT_TECH_ACCOUNT_ID}"
-            aio config:set  --json ims.contexts.cli.meta_scopes '["ent_cloudmgr_sdk"]'
-            aio config:set ims.contexts.cli.ims_org_id "${SERVICE_ACCOUNT_ORG_ID}"
-            aio config:set ims.contexts.cli.private_key  private.key --file
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.client_id "${SERVICE_ACCOUNT_CLIENT_ID}"
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.client_secret "${SERVICE_ACCOUNT_CLIENT_SECRET}"
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.technical_account_id "${SERVICE_ACCOUNT_TECH_ACCOUNT_ID}"
+            aio config:set  --json ims.contexts.aio-cli-plugin-cloudmanager.meta_scopes '["ent_cloudmgr_sdk"]'
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.ims_org_id "${SERVICE_ACCOUNT_ORG_ID}"
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.private_key  private.key --file
             
-            aio auth login > login.log
+            aio auth login --ctx=aio-cli-plugin-cloudmanager > login.log
 
 
 #      - run:

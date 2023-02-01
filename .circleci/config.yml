@@ -37,6 +37,22 @@ jobs:
             aio auth login --ctx=ALDI > login.log
 
 
+#      - run:
+#          name: "reset the RDE"
+#          command: |
+#                @aio aem:rde:reset
+
+      - run:
+          name: "build project"
+          command: 	mvn clean package
+
+      - run:
+          name: "install on RDE"
+          command: |
+            ALL_FILE=$(ls all/target/ | grep zip ) aio aem:rde:install -t content-package "all/target/${ALL_FILE}"
+            DISP_FILE=$(shell ls dispatcher/target/ | grep zip ) aio aem:rde:install -t dispatcher-config "dispatcher/target/${DISP_FILE}"
+
+
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:

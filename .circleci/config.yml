@@ -32,7 +32,7 @@ jobs:
             aio config:set ims.contexts.ALDI.ims_org_id "${SERVICE_ACCOUNT_ORG_ID"
             aio config:set ims.contexts.ALDI.private_key "${SERVICE_ACCOUNT_PRIVATE_KEY"
             
-            aio auth login --ctx=ALDI > login.log # don't print the token to output
+            aio auth login --ctx=ALDI > login.log
 
 
 # Invoke jobs via workflows

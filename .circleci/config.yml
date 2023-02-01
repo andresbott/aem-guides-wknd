@@ -26,11 +26,11 @@ jobs:
           name: "aio login"
           command: |
             aio config:set ims.contexts.ALDI.client_id "${SERVICE_ACCOUNT_CLIENT_ID}"
-            aio config:set ims.contexts.ALDI.client_secret "${SERVICE_ACCOUNT_CLIENT_SECRET"
-            aio config:set ims.contexts.ALDI.technical_account_id "${SERVICE_ACCOUNT_TECH_ACCOUNT_ID"
+            aio config:set ims.contexts.ALDI.client_secret "${SERVICE_ACCOUNT_CLIENT_SECRET}"
+            aio config:set ims.contexts.ALDI.technical_account_id "${SERVICE_ACCOUNT_TECH_ACCOUNT_ID}"
             aio config:set  --json ims.contexts.ALDI.meta_scopes '["ent_cloudmgr_sdk"]'
-            aio config:set ims.contexts.ALDI.ims_org_id "${SERVICE_ACCOUNT_ORG_ID"
-            aio config:set ims.contexts.ALDI.private_key "${SERVICE_ACCOUNT_PRIVATE_KEY"
+            aio config:set ims.contexts.ALDI.ims_org_id "${SERVICE_ACCOUNT_ORG_ID}"
+            aio config:set ims.contexts.ALDI.private_key "${SERVICE_ACCOUNT_PRIVATE_KEY}"
             
             aio auth login --ctx=ALDI > login.log
 

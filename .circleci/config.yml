@@ -52,7 +52,7 @@ jobs:
             mvn clean package
 
       - save_cache:
-          key: maven
+          key: maven-{{ checksum "pom.xml" }}
           paths:
             - /home/circleci/.m2/repository/
 

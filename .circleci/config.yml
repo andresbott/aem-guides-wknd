@@ -44,7 +44,8 @@ jobs:
 
       - run:
           name: "build project"
-          command: 	mvn clean package
+          command: |
+            mvn clean package
 
       - run:
           name: "install on RDE"

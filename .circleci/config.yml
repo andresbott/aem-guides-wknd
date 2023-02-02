@@ -44,7 +44,7 @@ jobs:
 
       - restore_cache:
           keys:
-            - maven
+            - maven-{{ checksum "pom.xml" }}
 
       - run:
           name: "build project"
@@ -63,8 +63,8 @@ jobs:
             aio config:set cloudmanager_programid 100060 
             aio config:set cloudmanager_environmentid 923606
             
-            ALL_FILE=$(ls all/target/ | grep zip ) aio aem:rde:install -t content-package "all/target/${ALL_FILE}"
-            DISP_FILE=$(ls dispatcher/target/ | grep zip ) aio aem:rde:install -t dispatcher-config "dispatcher/target/${DISP_FILE}"
+            ALL_FILE=$(ls all/target/ | grep zip ) && aio aem:rde:install -t content-package "all/target/${ALL_FILE}"
+            DISP_FILE=$(ls dispatcher/target/ | grep zip ) && aio aem:rde:install -t dispatcher-config "dispatcher/target/${DISP_FILE}"
 
       - run:
           name: "Run Integration Tests"

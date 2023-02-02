@@ -51,11 +51,6 @@ jobs:
           command: |
             mvn clean package
 
-      - save_cache:
-          key: maven-{{ checksum "pom.xml" }}
-          paths:
-            - /home/circleci/.m2/repository/
-
       - run:
           name: "install on RDE"
           command: |
@@ -80,6 +75,11 @@ jobs:
             -Dit.publish.password="${PUBLISH_PASSWORD}" \
             -Dmaven.javadoc.skip=true \
             -Dmaven.surefire.debug
+
+      - save_cache:
+          key: maven-{{ checksum "pom.xml" }}
+          paths:
+            - /home/circleci/.m2/repository/
 
 
 # Invoke jobs via workflows

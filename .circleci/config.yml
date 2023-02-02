@@ -62,6 +62,10 @@ jobs:
             DISP_FILE=$(ls dispatcher/target/ | grep zip ) && aio aem:rde:install -t dispatcher-config "dispatcher/target/${DISP_FILE}"
 
       - run:
+          name: "Sleep 2 minutes to let publish apply changes"
+          command: sleep 120;
+
+      - run:
           name: "Run Integration Tests"
           command: |
             cd it.tests 

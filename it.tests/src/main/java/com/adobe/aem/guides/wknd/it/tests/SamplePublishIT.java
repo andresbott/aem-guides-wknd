@@ -29,26 +29,13 @@ import static org.junit.Assert.assertEquals;
 
 
 public class SamplePublishIT {
-
-    // The CQAuthorClassRule represents an author service. The rule will read
-    // the hostname and port of the author service from the system properties
-    // passed to the tests.@ClassRule
-
     @ClassRule
     public static final CQPublishClassRule cqBaseClassRule = new CQPublishClassRule();
-
-    // CQRule decorates your test and adds additional functionality on top of
-    // it, like session stickyness, test filtering and identification of the
-    // test on the remote service.
 
     @Rule
     public CQRule cqBaseRule = new CQRule(cqBaseClassRule.publishRule);
 
-
     static CQClient adminPublish;
-
-    // Thanks to the CQAuthorClassRule, we can create two CQClient instances
-    // bound to the admin user on both the author and publish service.
 
     @BeforeClass
     public static void beforeClass() throws ClientException {
@@ -56,7 +43,8 @@ public class SamplePublishIT {
     }
 
     /**
-     * Verifies that the homepage exists on author
+     * This POC test verifies that the homepage contains the expected title.
+     * In a real world scenario we should NOT write tests that rely on content that is handled by content authors
      * @throws ClientException if cannot connect
      */
     @Test

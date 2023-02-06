@@ -62,7 +62,7 @@ jobs:
             DISP_FILE=$(ls dispatcher/target/ | grep zip ) && aio aem:rde:install -t dispatcher-config "dispatcher/target/${DISP_FILE}"
 
       - run:
-          name: "Run Integration Tests"/
+          name: "Run Integration Tests"
           command: |
             cd it.tests 
             mvn clean verify \

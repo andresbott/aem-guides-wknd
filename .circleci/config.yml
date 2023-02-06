@@ -98,7 +98,7 @@ jobs:
           name: "download Eaas login"
           command: |
               echo "${SERVICE_ACCOUNT_PRIVATE_KEY_B64}" | base64 -d > private.key
-              eaas login integration  \
+              eaas --url="https://devxapi.adobe.io" login integration  \
                 --organization "${SERVICE_ACCOUNT_ORG_ID}" \
                 --clientId "${SERVICE_ACCOUNT_CLIENT_ID}" \
                 --secret "${SERVICE_ACCOUNT_CLIENT_SECRET}" \
@@ -109,7 +109,7 @@ jobs:
           name: "start task"
           command: |
             cat .circleci/lh-task-payload.json
-            eaas start lh-task -f .circleci/lh-task-payload.json 
+            eaas --url="https://devxapi.adobe.io" start lh-task -f .circleci/lh-task-payload.json 
             
 
 # Invoke jobs via workflows

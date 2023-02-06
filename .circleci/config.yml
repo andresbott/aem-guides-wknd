@@ -108,7 +108,9 @@ jobs:
       - run:
           name: "start task"
           command: |
-            cat ../.circleci/lh-task-payload.json
+            cat .circleci/lh-task-payload.json
+            eaas start lh-task .circleci/lh-task-payload.json 
+            
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows

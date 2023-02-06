@@ -109,7 +109,7 @@ jobs:
           name: "start task"
           command: |
             cat .circleci/lh-task-payload.json
-            eaas start lh-task .circleci/lh-task-payload.json 
+            eaas start lh-task -f .circleci/lh-task-payload.json 
             
 
 # Invoke jobs via workflows

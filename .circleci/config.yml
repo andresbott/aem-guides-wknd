@@ -86,12 +86,11 @@ jobs:
     # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
     docker:
       - image: cimg/openjdk:11.0-node
-
+    steps:
       - run:
           name: "download Eaas cli"
           command: |
             curl -L https://github.com/andresbott/aem-guides-wknd/releases/download/poc-eaas/eaas-0.4.4  --output eaas
-
       - run:
           name: "download Eaas login"
           command: |

@@ -96,12 +96,13 @@ jobs:
       - run:
           name: "download Eaas login"
           command: |
+              eaas -h   
               echo "${SERVICE_ACCOUNT_PRIVATE_KEY_B64}" | base64 -d > private.key
               eaas login integration  \
-                --organization "${SERVICE_ACCOUNT_ORG_ID}" \ 
+                --organization "${SERVICE_ACCOUNT_ORG_ID}" \
                 --clientId "${SERVICE_ACCOUNT_CLIENT_ID}" \
-                --secret "${SERVICE_ACCOUNT_CLIENT_SECRET}" \ 
-                --privateKey private.key \ 
+                --secret "${SERVICE_ACCOUNT_CLIENT_SECRET}" \
+                --privateKey private.key \
                 --accountId "${SERVICE_ACCOUNT_TECH_ACCOUNT_ID}"
             
               eaas health           

@@ -10,6 +10,10 @@ jobs:
     # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
     docker:
       - image: cimg/openjdk:11.0-node
+
+    environment:
+      PROGRAM_ID: 100060
+      ENVIRONMENT_ID: 923606
     # Add steps to the job
     # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
@@ -55,8 +59,8 @@ jobs:
           name: "install on RDE"
           command: |
             aio config:set cloudmanager_orgid  "${SERVICE_ACCOUNT_ORG_ID}"
-            aio config:set cloudmanager_programid 100060 
-            aio config:set cloudmanager_environmentid 923606
+            aio config:set cloudmanager_programid "${PROGRAM_ID}" 
+            aio config:set cloudmanager_environmentid "${ENVIRONMENT_ID}"
             
             ALL_FILE=$(ls all/target/ | grep zip ) && aio aem:rde:install -t content-package "all/target/${ALL_FILE}"
             DISP_FILE=$(ls dispatcher/target/ | grep zip ) && aio aem:rde:install -t dispatcher-config "dispatcher/target/${DISP_FILE}"
@@ -95,7 +99,7 @@ jobs:
             chmod +x ./eaas
             sudo mv ./eaas /usr/local/bin/eaas
       - run:
-          name: "download Eaas login"
+          name: "Eaas login"
           command: |
               echo "${SERVICE_ACCOUNT_PRIVATE_KEY_B64}" | base64 -d > private.key
               eaas --url="https://devxapi.adobe.io" login integration  \
@@ -106,10 +110,50 @@ jobs:
                 --accountId "${SERVICE_ACCOUNT_TECH_ACCOUNT_ID}"            
               eaas health
       - run:
-          name: "start task"
+          name: "Generate the IT payload"
           command: |
-            cat .circleci/lh-task-payload.json
-            eaas --url="https://devxapi.adobe.io" start lh-task -f .circleci/lh-task-payload.json 
+            eaas generate it-task-payload
+            
+            sed -i "s|groupId:test-module-artifactId:version|com.adobe.cq.cloud:com.adobe.cq.cloud.testing.it.smoke:0.14.8-4f7653d|g ;
+            s|https:\/\/author-skyline:port|${AUTHOR_URL}|g ;
+            s|https:\/\/publish-skyline:port|${PUBLISH_URL}|g ;
+            s/authorPV\\$\\$/${AUTHOR_PASSWORD}/g ;
+            s/publishPV\\$\\$/${PUBLISH_PASSWORD}/g ;
+            " it-task-payload.json            
+
+      - run:
+          name: "Run the IT task"
+          command: |
+              # Start the IT Task            
+              eaas start it-task -f it-task-payload.json | tee it-task.out
+              task_id="`cat it-task.out | grep "Id:" | awk -F':' '{print $2}' | xargs`"
+              if [[ "${task_id}" == "" ]]; then
+                  echo "EAAS failed to generate task_id"
+                  exit 1
+              fi
+            
+              # Check IT Task status
+              start_time="`date +%s`"
+              IT_TASK_TIMEOUT=900
+              status_file="taskId-${task_id}.status"
+              while true; do
+                eaas status it-task --taskId ${task_id} | tee "${status_file}"
+                test_status="`cat "${status_file}" | grep "Status:" | awk -F':' '{print $2}' | xargs `"
+                if [[ "${test_status}" == "terminated" || "${test_status}" == "failed" || $((`date +%s` - ${start_time})) -gt ${IT_TASK_TIMEOUT} ]]; then
+                  break
+                fi
+              echo "waiting 10s to check again for task status"
+              sleep 10
+              done
+            
+              # parse results
+              test_passed="`cat "${status_file}" | grep "Tests passed:" | awk -F':' '{print $2}' | xargs `"
+              echo ${task_id}
+              echo ${test_status} 
+              echo ${test_passed} 
+        
+              # Generate task exit code
+              if [[ "${test_passed}" == "true" ]]; then exit 0; else exit 1; fi            
             
 
 # Invoke jobs via workflows

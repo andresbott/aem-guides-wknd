@@ -81,6 +81,10 @@ jobs:
             ALL_FILE=$(ls all/target/ | grep zip ) && aio aem:rde:install -t content-package "all/target/${ALL_FILE}"
             DISP_FILE=$(ls dispatcher/target/ | grep zip ) && aio aem:rde:install -t dispatcher-config "dispatcher/target/${DISP_FILE}"
 
+            # todo: we can check the status of the installation with "aio aem:rde:status"
+            echo "waiting 20s to finish rde install"
+            sleep 20
+
       - run:
           name: "Run Local Integration Tests"
           command: |

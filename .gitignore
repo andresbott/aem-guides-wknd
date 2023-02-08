@@ -60,6 +60,9 @@ hs_err_pid*
 # Mac OS #
 .DS_Store
 
+# linux
+.directory
+
 # local secrets
 secrets.sh
 
@@ -88,3 +91,6 @@ buildNumber.properties
 ### Node/NPM ###
 node/
 node_modules/
+
+### CI ###
+.circleci/testadmin.zip

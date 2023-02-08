@@ -68,7 +68,7 @@ jobs:
           command: |
             # Note: I have observed some install failures if the user/password contain special characters like "+"
             # this is currently being investigated: SKYOPS-52856
-            .circleci/create-user-osgi-cfg.sh -u "${AUTHOR_USER}" -p "${AUTHOR_PASSWORD}" -q true
+            .circleci/create-user-osgi-cfg.sh -u "${AEM_USER}" -p "${AEM_PASSWORD}" -q true
             
             aio aem:rde:install -t osgi-config org.apache.sling.jcr.repoinit.RepositoryInitializer~testadmin-user-add.cfg.json
             
@@ -131,8 +131,9 @@ jobs:
             sed -i "s|groupId:test-module-artifactId:version|com.adobe.cq.cloud:com.adobe.cq.cloud.testing.it.smoke:0.14.8-4f7653d|g ;
             s|https:\/\/author-skyline:port|${AUTHOR_URL}|g ;
             s|https:\/\/publish-skyline:port|${PUBLISH_URL}|g ;
-            s/authorPV\\$\\$/${AUTHOR_PASSWORD}/g ;
-            s/publishPV\\$\\$/${PUBLISH_PASSWORD}/g ;
+            s/authorPV\\$\\$/${AEM_PASSWORD}/g ;
+            s/publishPV\\$\\$/${AEM_PASSWORD}/g ;
+            s/user\":\ \"admin/user\": \"${AEM_USER}/g ;
             " it-task-payload.json            
 
       - run:

@@ -59,8 +59,9 @@ jobs:
 
       - run:
           name: "reset the RDE"
+          no_output_timeout: 15m
           command: |
-                aio aem:rde:reset
+                time aio aem:rde:reset
 
       - run:
           name: "setup new admin user on RDE"

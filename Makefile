@@ -27,7 +27,13 @@ local-it: ## run ITs locally
 	-Dit.publish.user="$${PUBLISH_USER}" \
 	-Dit.publish.password="$${PUBLISH_PASSWORD}" \
 	-Dmaven.javadoc.skip=true \
-	-Dmaven.surefire.debug
+	-Dmaven.surefire.debug \
+	-Dorg.apache.commons.logging.Log=org.apache.commons.logging.impl.SimpleLog \
+	-Dorg.apache.commons.logging.simplelog.showdatetime=true \
+	-Dorg.apache.commons.logging.simplelog.log.org.apache.http=DEBUG \
+	-Dorg.apache.commons.logging.simplelog.log.org.apache.http.wire=ERROR
+
+#	-Dit.test=PageTitleIT
 
 clean: ## clean the build environment
 	@mvn clean

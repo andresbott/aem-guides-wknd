@@ -311,5 +311,5 @@ workflows:
       - RDE-reset
       - RDE-install:
           requires:
-            - build
+            - Build
             - RDE-reset

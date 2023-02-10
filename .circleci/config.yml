@@ -178,10 +178,24 @@ jobs:
             aio aem:rde:delete org.apache.sling.jcr.repoinit.RepositoryInitializer~testadmin-user-remove
           when: always
 
+  build:
+    docker:
+      - image: cimg/openjdk:11.0-node
+    steps:
+      - run: echo "this is a build"
+      - run: sleep 5
+
+  rde-reset:
+    docker:
+      - image: cimg/openjdk:11.0-node
+    steps:
+      - run: echo "this is a reset"
+      - run: sleep 5
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  pr-verify:
+  test:
     jobs:
-      - verify
+      - build
+      - rde-reset

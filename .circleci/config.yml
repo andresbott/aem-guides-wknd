@@ -5,20 +5,12 @@ version: 2.1
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-  verify:
-    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
+
+  Build:
     docker:
       - image: cimg/openjdk:11.0-node
-
-    environment:
-      PROGRAM_ID: 100060
-      ENVIRONMENT_ID: 923606
-    # Add steps to the job
-    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
     steps:
       - checkout
-
       - restore_cache:
           keys:
             - maven-{{ checksum "pom.xml" }}
@@ -26,10 +18,33 @@ jobs:
       - run:
           name: "build project"
           command: |
+            mkdir -p workspace/all
+            mkdir -p workspace/dispatcher
             mvn clean install
 
       - run:
-          name: "prepare aio"
+          name: "copy build artifacts"
+          command: |
+            cp -r all/target/*.zip workspace/all
+            cp -r dispatcher/target/*.zip workspace/dispatcher
+
+      - persist_to_workspace:
+          root: workspace
+          paths:
+            - all
+            - dispatcher
+
+      - save_cache:
+          key: maven-{{ checksum "pom.xml" }}
+          paths:
+            - /home/circleci/.m2/repository/
+
+  RDE-reset:
+    docker:
+      - image: cimg/openjdk:11.0-node
+    steps:
+      - run:
+          name: "Install aio-cli"
           command: |
             npm install -g @adobe/aio-cli
             aio plugins:install @adobe/aio-cli-plugin-cloudmanager
@@ -50,9 +65,7 @@ jobs:
             
             aio auth login --ctx=aio-cli-plugin-cloudmanager > login.log
             
-      - run:
-          name: "Configure the RDE coordinates"
-          command: |
+            # configure coordinates
             aio config:set cloudmanager_orgid  "${SERVICE_ACCOUNT_ORG_ID}"
             aio config:set cloudmanager_programid "${PROGRAM_ID}" 
             aio config:set cloudmanager_environmentid "${ENVIRONMENT_ID}"
@@ -61,30 +74,72 @@ jobs:
           name: "reset the RDE"
           no_output_timeout: 15m
           command: |
-                time aio aem:rde:reset
+            time aio aem:rde:reset
+
+  RDE-install:
+    docker:
+      - image: cimg/openjdk:11.0-node
+    steps:
+      - checkout
+      - run:
+          name: "Install aio-cli"
+          command: |
+            npm install -g @adobe/aio-cli
+            aio plugins:install @adobe/aio-cli-plugin-cloudmanager
+            aio plugins:install @adobe/aio-cli-plugin-aem-rde
+            aio plugins:update
+      - run:
+          name: "aio login"
+          command: |
+            echo "${SERVICE_ACCOUNT_PRIVATE_KEY_B64}" | base64 -d > private.key
+            
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.client_id "${SERVICE_ACCOUNT_CLIENT_ID}"
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.client_secret "${SERVICE_ACCOUNT_CLIENT_SECRET}"
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.technical_account_id "${SERVICE_ACCOUNT_TECH_ACCOUNT_ID}"
+            aio config:set  --json ims.contexts.aio-cli-plugin-cloudmanager.meta_scopes '["ent_cloudmgr_sdk"]'
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.ims_org_id "${SERVICE_ACCOUNT_ORG_ID}"
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.private_key  private.key --file
+            
+            aio auth login --ctx=aio-cli-plugin-cloudmanager > login.log
+            
+            # configure coordinates
+            aio config:set cloudmanager_orgid  "${SERVICE_ACCOUNT_ORG_ID}"
+            aio config:set cloudmanager_programid "${PROGRAM_ID}" 
+            aio config:set cloudmanager_environmentid "${ENVIRONMENT_ID}"
 
       - run:
           name: "setup new admin user on RDE"
           command: |
-            # Note: I have observed some install failures if the user/password contain special characters like "+"
-            # this is currently being investigated: SKYOPS-52856
+            # Note: repoinit has some limitations with special characters in password, e.g. "+" sign
             .circleci/create-user-osgi-cfg.sh -u "${AEM_USER}" -p "${AEM_PASSWORD}" -q true
             
             aio aem:rde:install -t osgi-config org.apache.sling.jcr.repoinit.RepositoryInitializer~testadmin-user-add.cfg.json
             
             # delete the osgi config, this is fine since the script contained within the config is not reverterd
-            aio aem:rde:delete org.apache.sling.jcr.repoinit.RepositoryInitializer~testadmin-user-add
+            aio aem:rde:delete org.apache.sling.jcr.repoinit.RepositoryInitializer~testadmin-user-add    
+
+      - attach_workspace:
+          at: /tmp/workspace
 
       - run:
           name: "install project on RDE"
           command: |
-            ALL_FILE=$(ls all/target/ | grep zip ) && aio aem:rde:install -t content-package "all/target/${ALL_FILE}"
-            DISP_FILE=$(ls dispatcher/target/ | grep zip ) && aio aem:rde:install -t dispatcher-config "dispatcher/target/${DISP_FILE}"
+            set -e
+            ALL_FILE=$(ls /tmp/workspace/all/ | grep zip ) && aio aem:rde:install -t content-package "/tmp/workspace/all/${ALL_FILE}"
+            DISP_FILE=$(ls /tmp/workspace/dispatcher/ | grep zip ) && aio aem:rde:install -t dispatcher-config "/tmp/workspace/dispatcher/${DISP_FILE}"
 
             # todo: we can check the status of the installation with "aio aem:rde:status"
             echo "waiting 20s to finish rde install"
-            sleep 20
+            sleep 20    
 
+  Customer-ITs:
+    docker:
+      - image: cimg/openjdk:11.0-node
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - maven-{{ checksum "pom.xml" }}
       - run:
           name: "Run Local Integration Tests"
           command: |
@@ -100,11 +155,10 @@ jobs:
             -Dmaven.javadoc.skip=true \
             -Dmaven.surefire.debug
 
-      - save_cache:
-          key: maven-{{ checksum "pom.xml" }}
-          paths:
-            - /home/circleci/.m2/repository/
-
+  Product-tests:
+    docker:
+      - image: cimg/openjdk:11.0-node
+    steps:
       - run:
           name: "download Eaas cli"
           command: |
@@ -169,19 +223,68 @@ jobs:
             
             # Generate task exit code
             if [[ "${test_passed}" == "true" ]]; then exit 0; else exit 1; fi           
+
+  Cleanup:
+    # This step removes the test user that we created in a previous step
+    docker:
+      - image: cimg/openjdk:11.0-node
+    steps:
+      - checkout
+      - run:
+          name: "Install aio-cli"
+          command: |
+            npm install -g @adobe/aio-cli
+            aio plugins:install @adobe/aio-cli-plugin-cloudmanager
+            aio plugins:install @adobe/aio-cli-plugin-aem-rde
+            aio plugins:update
+      - run:
+          name: "aio login"
+          command: |
+            echo "${SERVICE_ACCOUNT_PRIVATE_KEY_B64}" | base64 -d > private.key
             
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.client_id "${SERVICE_ACCOUNT_CLIENT_ID}"
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.client_secret "${SERVICE_ACCOUNT_CLIENT_SECRET}"
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.technical_account_id "${SERVICE_ACCOUNT_TECH_ACCOUNT_ID}"
+            aio config:set  --json ims.contexts.aio-cli-plugin-cloudmanager.meta_scopes '["ent_cloudmgr_sdk"]'
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.ims_org_id "${SERVICE_ACCOUNT_ORG_ID}"
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.private_key  private.key --file
+            
+            aio auth login --ctx=aio-cli-plugin-cloudmanager > login.log
+            
+            # configure coordinates
+            aio config:set cloudmanager_orgid  "${SERVICE_ACCOUNT_ORG_ID}"
+            aio config:set cloudmanager_programid "${PROGRAM_ID}" 
+            aio config:set cloudmanager_environmentid "${ENVIRONMENT_ID}"     
 
       - run:
           name: Uninstall the user from the RDE
           command: |
+            # Note: repoinit has some limitations with special characters in password, e.g. "+" sign
+            .circleci/create-user-osgi-cfg.sh -u "${AEM_USER}" -p "${AEM_PASSWORD}" -q true
+            
             aio aem:rde:install -t osgi-config org.apache.sling.jcr.repoinit.RepositoryInitializer~testadmin-user-remove.cfg.json
             aio aem:rde:delete org.apache.sling.jcr.repoinit.RepositoryInitializer~testadmin-user-remove
-          when: always
 
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  pr-verify:
+  PR-validation:
     jobs:
-      - verify
+      - Build
+      - RDE-reset
+      - RDE-install:
+          requires:
+            - Build
+            - RDE-reset
+
+      - Customer-ITs:
+          requires:
+            - RDE-install
+      - Product-tests:
+          requires:
+            - RDE-install
+      - Cleanup:
+          requires:
+            - Product-tests
+            - Customer-ITs

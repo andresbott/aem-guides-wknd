@@ -175,7 +175,7 @@ jobs:
             aio aem:rde:delete org.apache.sling.jcr.repoinit.RepositoryInitializer~testadmin-user-remove
           when: always
 
-  build:
+  Build:
     docker:
       - image: cimg/openjdk:11.0-node
     steps:
@@ -213,6 +213,7 @@ jobs:
     docker:
       - image: cimg/openjdk:11.0-node
     steps:
+      - checkout
       - run:
           name: "Install aio-cli"
           command: |
@@ -279,8 +280,7 @@ jobs:
       - run:
           name: "setup new admin user on RDE"
           command: |
-            # Note: I have observed some install failures if the user/password contain special characters like "+"
-            # this is currently being investigated: SKYOPS-52856
+            # Note: repoinit has some limitations with special characters in password, e.g. "+" sign
             .circleci/create-user-osgi-cfg.sh -u "${AEM_USER}" -p "${AEM_PASSWORD}" -q true
             
             aio aem:rde:install -t osgi-config org.apache.sling.jcr.repoinit.RepositoryInitializer~testadmin-user-add.cfg.json
@@ -301,12 +301,13 @@ jobs:
             echo "waiting 20s to finish rde install"
             sleep 20          
 
+
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   PR-validation:
     jobs:
-      - build
+      - Build
       - RDE-reset
       - RDE-install:
           requires:

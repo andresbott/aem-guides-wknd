@@ -429,3 +429,7 @@ workflows:
       - Product-tests:
           requires:
             - RDE-install
+      - Cleanup:
+          requires:
+            - Product-tests
+            - Customer-ITs

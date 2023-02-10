@@ -213,7 +213,6 @@ jobs:
     docker:
       - image: cimg/openjdk:11.0-node
     steps:
-      - checkout
       - run:
           name: "Install aio-cli"
           command: |
@@ -251,6 +250,7 @@ jobs:
     docker:
       - image: cimg/openjdk:11.0-node
     steps:
+      - checkout
       - run:
           name: "Install aio-cli"
           command: |
@@ -308,8 +308,8 @@ workflows:
   PR-validation:
     jobs:
       - Build
-      - RDE-reset
+#      - RDE-reset
       - RDE-install:
           requires:
             - Build
-            - RDE-reset
+#            - RDE-reset

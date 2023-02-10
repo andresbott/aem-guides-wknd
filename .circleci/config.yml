@@ -189,13 +189,18 @@ jobs:
     docker:
       - image: cimg/openjdk:11.0-node
     steps:
-      - run: echo "this is a reset"
-      - run: sleep 5
+      - run:
+          name: "prepare aio"
+          command: |
+            npm install -g @adobe/aio-cli
+            aio plugins:install @adobe/aio-cli-plugin-cloudmanager
+            aio plugins:install @adobe/aio-cli-plugin-aem-rde
+            aio plugins:update
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  test:
+  PR-validation:
     jobs:
       - build
       - rde-reset

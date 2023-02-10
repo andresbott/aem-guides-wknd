@@ -417,11 +417,11 @@ workflows:
   PR-validation:
     jobs:
       - Build
-#      - RDE-reset
+      - RDE-reset
       - RDE-install:
           requires:
             - Build
-#            - RDE-reset
+            - RDE-reset
 
       - Customer-ITs:
           requires:

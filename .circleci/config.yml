@@ -299,7 +299,31 @@ jobs:
 
             # todo: we can check the status of the installation with "aio aem:rde:status"
             echo "waiting 20s to finish rde install"
-            sleep 20          
+            sleep 20    
+            
+
+  Customer-ITs:
+    docker:
+      - image: cimg/openjdk:11.0-node
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - maven-{{ checksum "pom.xml" }}
+      - run:
+          name: "Run Local Integration Tests"
+          command: |
+            cd it.tests 
+            mvn clean verify \
+            -Plocal \
+            -Dit.author.url="${AUTHOR_URL}" \
+            -Dit.author.user="${AEM_USER}" \
+            -Dit.author.password="${AEM_PASSWORD}" \
+            -Dit.publish.url="${PUBLISH_URL}" \
+            -Dit.publish.user="${AEM_USER}" \
+            -Dit.publish.password="${AEM_PASSWORD}" \
+            -Dmaven.javadoc.skip=true \
+            -Dmaven.surefire.debug            
 
 
 # Invoke jobs via workflows
@@ -307,9 +331,11 @@ jobs:
 workflows:
   PR-validation:
     jobs:
-      - Build
+#      - Build
 #      - RDE-reset
-      - RDE-install:
-          requires:
-            - Build
+#      - RDE-install:
+#          requires:
+#            - Build
 #            - RDE-reset
+
+      - Customer-ITs

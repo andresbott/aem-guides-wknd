@@ -190,8 +190,13 @@ jobs:
             mkdir -p workspace/all
             mkdir -p workspace/dispatcher
             mvn clean install
-            cp all/target/* workspace/all
-            cp dispatcher/target/* workspace/dispatcher
+
+      - run:
+          name: "copy build artifacts"
+          command: |
+            cp -r all/target/*.zip workspace/all
+            cp -r dispatcher/target/*.zip workspace/dispatcher
+
       - persist_to_workspace:
           root: workspace
           paths:
@@ -204,7 +209,7 @@ jobs:
             - /home/circleci/.m2/repository/
 
 
-  rde-reset:
+  RDE-reset:
     docker:
       - image: cimg/openjdk:11.0-node
     steps:
@@ -241,7 +246,7 @@ jobs:
           command: |
             time aio aem:rde:reset
 
-  rde-install:
+  RDE-install:
     docker:
       - image: cimg/openjdk:11.0-node
     steps:
@@ -302,8 +307,8 @@ workflows:
   PR-validation:
     jobs:
       - build
-      - rde-reset
-      - rde-install:
+      - RDE-reset
+      - RDE-install:
           requires:
             - build
-            - rde-reset
+            - RDE-reset

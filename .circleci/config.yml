@@ -84,7 +84,7 @@ jobs:
       - run:
           name: "Install aio-cli"
           command: |
-            npm install -g @adobe/aio-cli
+            sudo npm install -g @adobe/aio-cli
             aio plugins:install @adobe/aio-cli-plugin-cloudmanager
             aio plugins:install @adobe/aio-cli-plugin-aem-rde
             aio plugins:update
@@ -233,7 +233,7 @@ jobs:
       - run:
           name: "Install aio-cli"
           command: |
-            npm install -g @adobe/aio-cli
+            sudo npm install -g @adobe/aio-cli
             aio plugins:install @adobe/aio-cli-plugin-cloudmanager
             aio plugins:install @adobe/aio-cli-plugin-aem-rde
             aio plugins:update

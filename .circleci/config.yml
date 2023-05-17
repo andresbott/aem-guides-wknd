@@ -46,7 +46,7 @@ jobs:
       - run:
           name: "Install aio-cli"
           command: |
-            npm install -g @adobe/aio-cli
+            sudo npm install -g @adobe/aio-cli
             aio plugins:install @adobe/aio-cli-plugin-cloudmanager
             aio plugins:install @adobe/aio-cli-plugin-aem-rde
             aio plugins:update
@@ -182,7 +182,7 @@ jobs:
           command: |
             eaas generate it-task-payload
             
-            sed -i "s|groupId:test-module-artifactId:version|com.adobe.cq.cloud:com.adobe.cq.cloud.testing.it.smoke:0.14.8-4f7653d|g ;
+            sed -i "s|groupId:test-module-artifactId:version|com.adobe.cq.cloud:com.adobe.cq.cloud.testing.it.smoke:0.19.0|g ;
             s|https:\/\/author-skyline:port|${AUTHOR_URL}|g ;
             s|https:\/\/publish-skyline:port|${PUBLISH_URL}|g ;
             s/authorPV\\$\\$/${AEM_PASSWORD}/g ;

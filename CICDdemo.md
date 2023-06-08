@@ -33,7 +33,7 @@ git pull
 Change the page title and push
 
 ```
-git checktout -b demo
+git checkout -b demo
 git cherry-pick fa47d2938dfe222db16e9464cb469d9ff00434b4
 git log -1 -p
 git push

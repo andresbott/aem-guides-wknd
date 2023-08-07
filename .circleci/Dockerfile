@@ -3,8 +3,9 @@ FROM cimg/openjdk:11.0-node
 
 ## install aio-cli https://github.com/adobe/aio-cli
 RUN sudo npm install -g @adobe/aio-cli
-RUN sudo aio plugins:install @adobe/aio-cli-plugin-cloudmanager
-RUN sudo aio plugins:install @adobe/aio-cli-plugin-aem-rde
+RUN aio telemetry off # prevent AIO to be interactive and fail with exit code 0! this breaks the build
+RUN aio plugins:install @adobe/aio-cli-plugin-cloudmanager
+RUN aio plugins:install @adobe/aio-cli-plugin-aem-rde
 RUN aio plugins:update
 
 

@@ -8,7 +8,7 @@ jobs:
 
   Build:
     docker:
-      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:f2263e71c4f8
+      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:b40e78632592
         auth:
           username: andresbott
           password: $GH_CONTAINER_RO_EXP_07_24

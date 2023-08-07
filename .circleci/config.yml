@@ -8,7 +8,7 @@ jobs:
 
   Build:
     docker:
-      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:e80037bbaaf6
+      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:87d90b85d9e3
         auth:
           username: andresbott
           password: $GH_CONTAINER_RO_EXP_07_24
@@ -43,7 +43,7 @@ jobs:
             - /home/circleci/.m2/repository/
   RDE-reset:
     docker:
-      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:e80037bbaaf6
+      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:87d90b85d9e3
         auth:
           username: andresbott
           password: $GH_CONTAINER_RO_EXP_07_24
@@ -78,7 +78,7 @@ jobs:
 
   RDE-install:
     docker:
-      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:e80037bbaaf6
+      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:87d90b85d9e3
         auth:
           username: andresbott
           password: $GH_CONTAINER_RO_EXP_07_24
@@ -133,7 +133,7 @@ jobs:
 
   Customer-ITs:
     docker:
-      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:e80037bbaaf6
+      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:87d90b85d9e3
         auth:
           username: andresbott
           password: $GH_CONTAINER_RO_EXP_07_24
@@ -160,7 +160,7 @@ jobs:
 
   Product-tests:
     docker:
-      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:e80037bbaaf6
+      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:87d90b85d9e3
         auth:
           username: andresbott
           password: $GH_CONTAINER_RO_EXP_07_24
@@ -169,18 +169,33 @@ jobs:
           name: "Eaas login"
           command: |
             echo "${SERVICE_ACCOUNT_PRIVATE_KEY_B64}" | base64 -d > private.key
-            eaas --url="https://devxapi.adobe.io" login integration  \
+            eaas login integration  \
               --organization "${SERVICE_ACCOUNT_ORG_ID}" \
               --clientId "${SERVICE_ACCOUNT_CLIENT_ID}" \
               --secret "${SERVICE_ACCOUNT_CLIENT_SECRET}" \
               --privateKey private.key \
               --accountId "${SERVICE_ACCOUNT_TECH_ACCOUNT_ID}"            
             eaas health
+      - run:
+          name: "Generate the IT payload"
+          command: |         
+            eaas task it generate \
+            -a "${AUTHOR_URL}" -u admin -p "${AEM_PASSWORD}" \
+            -A "${PUBLISH_URL}" -U admin -P "${AEM_PASSWORD}" \
+            -m "com.adobe.cq.cloud:com.adobe.cq.cloud.testing.it.smoke:0.19.0"
+
+      - run:
+          name: "Run the Product test"
+          command: |
+            eaas task it run it-task-payload.json 
+
+      - store_artifacts:
+          path: TODO
 
   Cleanup:
     # This step removes the test user that we created in a previous step
     docker:
-      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:e80037bbaaf6
+      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:87d90b85d9e3
         auth:
           username: andresbott
           password: $GH_CONTAINER_RO_EXP_07_24

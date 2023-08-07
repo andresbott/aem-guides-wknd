@@ -10,6 +10,6 @@ RUN aio plugins:update
 
 
 ## install the cli for the Adobe internal validations API
-RUN curl -L https://github.com/andresbott/aem-guides-wknd/releases/download/poc-eaas/eaas-next-linux-amd64-snapshot-1ee42bf907a6  --output eaas && \
+RUN curl -L https://github.com/andresbott/aem-guides-wknd/releases/download/poc-eaas/eaas-next-linux-amd64-snapshot-01ecce5164ed  --output eaas && \
   chmod +x ./eaas && \
   sudo mv ./eaas /usr/local/bin/eaas

@@ -1,2 +1,14 @@
 FROM cimg/openjdk:11.0-node
 # alternative: FROM cimg/openjdk:11.0.20-node
+
+## install aio-cli https://github.com/adobe/aio-cli
+RUN sudo npm install -g @adobe/aio-cli
+RUN sudo aio plugins:install @adobe/aio-cli-plugin-cloudmanager
+RUN sudo aio plugins:install @adobe/aio-cli-plugin-aem-rde
+RUN aio plugins:update
+
+
+## install the cli for the Adobe internal validations API
+RUN curl -L https://github.com/andresbott/aem-guides-wknd/releases/download/poc-eaas/eaas-next-linux-amd64-snapshot-1ee42bf907a6  --output eaas && \
+  chmod +x ./eaas && \
+  sudo mv ./eaas /usr/local/bin/eaas

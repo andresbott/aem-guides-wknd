@@ -41,7 +41,6 @@ jobs:
           key: maven-{{ checksum "pom.xml" }}
           paths:
             - /home/circleci/.m2/repository/
-
   RDE-reset:
     docker:
       - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:f2263e71c4f8
@@ -84,7 +83,10 @@ jobs:
 
   RDE-install:
     docker:
-      - image: cimg/openjdk:11.0-node
+      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:b40e78632592
+        auth:
+          username: andresbott
+          password: $GH_CONTAINER_RO_EXP_07_24
     steps:
       - checkout
       - run:
@@ -140,7 +142,10 @@ jobs:
 
   Customer-ITs:
     docker:
-      - image: cimg/openjdk:11.0-node
+      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:b40e78632592
+        auth:
+          username: andresbott
+          password: $GH_CONTAINER_RO_EXP_07_24
     steps:
       - checkout
       - restore_cache:
@@ -161,17 +166,14 @@ jobs:
             -Dmaven.javadoc.skip=true \
             -Dmaven.surefire.debug
 
+
   Product-tests:
     docker:
-      - image: cimg/openjdk:11.0-node
+      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:b40e78632592
+        auth:
+          username: andresbott
+          password: $GH_CONTAINER_RO_EXP_07_24
     steps:
-      - run:
-          name: "download Eaas cli"
-          command: |
-            curl -L https://github.com/andresbott/aem-guides-wknd/releases/download/poc-eaas/eaas-0.4.4  --output eaas
-            chmod +x ./eaas
-            sudo mv ./eaas /usr/local/bin/eaas
-
       - run:
           name: "Eaas login"
           command: |
@@ -183,57 +185,14 @@ jobs:
               --privateKey private.key \
               --accountId "${SERVICE_ACCOUNT_TECH_ACCOUNT_ID}"            
             eaas health
-      - run:
-          name: "Generate the IT payload"
-          command: |
-            eaas generate it-task-payload
-            
-            sed -i "s|groupId:test-module-artifactId:version|com.adobe.cq.cloud:com.adobe.cq.cloud.testing.it.smoke:0.19.0|g ;
-            s|https:\/\/author-skyline:port|${AUTHOR_URL}|g ;
-            s|https:\/\/publish-skyline:port|${PUBLISH_URL}|g ;
-            s/authorPV\\$\\$/${AEM_PASSWORD}/g ;
-            s/publishPV\\$\\$/${AEM_PASSWORD}/g ;
-            s/user\":\ \"admin/user\": \"${AEM_USER}/g ;
-            " it-task-payload.json            
-
-      - run:
-          name: "Run the IT task"
-          command: |
-            # Start the IT Task            
-            eaas start it-task -f it-task-payload.json | tee it-task.out
-            task_id="`cat it-task.out | grep "Id:" | awk -F':' '{print $2}' | xargs`"
-            if [[ "${task_id}" == "" ]]; then
-                echo "EAAS failed to generate task_id"
-                exit 1
-            fi
-            
-            # Check IT Task status
-            start_time="`date +%s`"
-            IT_TASK_TIMEOUT=900
-            status_file="taskId-${task_id}.status"
-            while true; do
-              eaas status it-task --taskId ${task_id} | tee "${status_file}"
-              test_status="`cat "${status_file}" | grep "Status:" | awk -F':' '{print $2}' | xargs `"
-              if [[ "${test_status}" == "terminated" || "${test_status}" == "failed" || $((`date +%s` - ${start_time})) -gt ${IT_TASK_TIMEOUT} ]]; then
-                break
-              fi
-            echo "waiting 10s to check again for task status"
-            sleep 10
-            done
-            
-            # parse results
-            test_passed="`cat "${status_file}" | grep "Tests passed:" | awk -F':' '{print $2}' | xargs `"
-            echo ${task_id}
-            echo ${test_status} 
-            echo ${test_passed} 
-            
-            # Generate task exit code
-            if [[ "${test_passed}" == "true" ]]; then exit 0; else exit 1; fi           
 
   Cleanup:
     # This step removes the test user that we created in a previous step
     docker:
-      - image: cimg/openjdk:11.0-node
+      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:b40e78632592
+        auth:
+          username: andresbott
+          password: $GH_CONTAINER_RO_EXP_07_24
     steps:
       - checkout
       - run:

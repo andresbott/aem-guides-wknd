@@ -49,14 +49,6 @@ jobs:
           password: $GH_CONTAINER_RO_EXP_07_24
     steps:
       - run:
-          name: "Install aio-cli"
-          command: |
-            sudo npm install -g @adobe/aio-cli
-            aio plugins:install @adobe/aio-cli-plugin-cloudmanager
-            aio plugins:install @adobe/aio-cli-plugin-aem-rde
-            aio plugins:update
-
-      - run:
           name: "aio login"
           command: |
             echo "${SERVICE_ACCOUNT_PRIVATE_KEY_B64}" | base64 -d > private.key
@@ -89,13 +81,6 @@ jobs:
           password: $GH_CONTAINER_RO_EXP_07_24
     steps:
       - checkout
-      - run:
-          name: "Install aio-cli"
-          command: |
-            sudo npm install -g @adobe/aio-cli
-            aio plugins:install @adobe/aio-cli-plugin-cloudmanager
-            aio plugins:install @adobe/aio-cli-plugin-aem-rde
-            aio plugins:update
       - run:
           name: "aio login"
           command: |

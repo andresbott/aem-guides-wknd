@@ -8,7 +8,10 @@ jobs:
 
   Build:
     docker:
-      - image: cimg/openjdk:11.0-node
+      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:f2263e71c4f8
+        auth:
+          username: andresbott
+          password: $GH_CONTAINER_RO_EXP_07_24
     steps:
       - checkout
       - restore_cache:
@@ -41,7 +44,10 @@ jobs:
 
   RDE-reset:
     docker:
-      - image: cimg/openjdk:11.0-node
+      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:f2263e71c4f8
+        auth:
+          username: andresbott
+          password: $GH_CONTAINER_RO_EXP_07_24
     steps:
       - run:
           name: "Install aio-cli"

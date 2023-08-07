@@ -53,6 +53,9 @@ jobs:
           command: |
             echo "${SERVICE_ACCOUNT_PRIVATE_KEY_B64}" | base64 -d > private.key
             
+            # prevent aio to ask questions
+            aio telemetry off 
+            
             aio config:set ims.contexts.aio-cli-plugin-cloudmanager.client_id "${SERVICE_ACCOUNT_CLIENT_ID}"
             aio config:set ims.contexts.aio-cli-plugin-cloudmanager.client_secret "${SERVICE_ACCOUNT_CLIENT_SECRET}"
             aio config:set ims.contexts.aio-cli-plugin-cloudmanager.technical_account_id "${SERVICE_ACCOUNT_TECH_ACCOUNT_ID}"
@@ -85,6 +88,9 @@ jobs:
           name: "aio login"
           command: |
             echo "${SERVICE_ACCOUNT_PRIVATE_KEY_B64}" | base64 -d > private.key
+            
+            # prevent aio to ask questions
+            aio telemetry off 
             
             aio config:set ims.contexts.aio-cli-plugin-cloudmanager.client_id "${SERVICE_ACCOUNT_CLIENT_ID}"
             aio config:set ims.contexts.aio-cli-plugin-cloudmanager.client_secret "${SERVICE_ACCOUNT_CLIENT_SECRET}"
@@ -191,6 +197,9 @@ jobs:
           name: "aio login"
           command: |
             echo "${SERVICE_ACCOUNT_PRIVATE_KEY_B64}" | base64 -d > private.key
+            
+            # prevent aio to ask questions
+            aio telemetry off 
             
             aio config:set ims.contexts.aio-cli-plugin-cloudmanager.client_id "${SERVICE_ACCOUNT_CLIENT_ID}"
             aio config:set ims.contexts.aio-cli-plugin-cloudmanager.client_secret "${SERVICE_ACCOUNT_CLIENT_SECRET}"

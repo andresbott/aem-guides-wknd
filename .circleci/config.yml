@@ -189,9 +189,11 @@ jobs:
           no_output_timeout: 15m
           command: |
             eaas task it run it-task-payload.json 
+            mkdir -p artifacts
+            mv *.zip artifacts
 
       - store_artifacts:
-          path: TODO
+          path: artifacts
 
   Cleanup:
     # This step removes the test user that we created in a previous step

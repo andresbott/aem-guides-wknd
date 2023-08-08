@@ -180,12 +180,13 @@ jobs:
           name: "Generate the IT payload"
           command: |         
             eaas task it generate \
-            -a "${AUTHOR_URL}" -u admin -p "${AEM_PASSWORD}" \
-            -A "${PUBLISH_URL}" -U admin -P "${AEM_PASSWORD}" \
+            -a "${AUTHOR_URL}" -u testeradmin -p "${AEM_PASSWORD}" \
+            -A "${PUBLISH_URL}" -U testeradmin -P "${AEM_PASSWORD}" \
             -m "com.adobe.cq.cloud:com.adobe.cq.cloud.testing.it.smoke:0.19.0"
 
       - run:
           name: "Run the Product test"
+          no_output_timeout: 15m
           command: |
             eaas task it run it-task-payload.json 
 

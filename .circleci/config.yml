@@ -128,7 +128,7 @@ jobs:
             DISP_FILE=$(ls /tmp/workspace/dispatcher/ | grep zip ) && aio aem:rde:install -t dispatcher-config "/tmp/workspace/dispatcher/${DISP_FILE}"
 
             # todo: we can check the status of the installation with "aio aem:rde:status"
-            echo "waiting 20s to finish rde install"
+            echo "waiting 3min to finish rde install (the wknd installation restarts AEM)"
             sleep 180    
 
   Customer-ITs:

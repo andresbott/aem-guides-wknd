@@ -129,7 +129,7 @@ jobs:
 
             # todo: we can check the status of the installation with "aio aem:rde:status"
             echo "waiting 20s to finish rde install"
-            sleep 20    
+            sleep 180    
 
   Customer-ITs:
     docker:

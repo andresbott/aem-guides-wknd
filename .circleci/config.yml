@@ -245,7 +245,7 @@ jobs:
 
   clean:
     docker:
-      - image: circleci/node
+      - image: cimg/base:2021.04
     steps:
       - run:
           # workaround for running a task at the end, regardless of the previous job result
@@ -269,7 +269,11 @@ workflows:
       - c:
           requires:
           - a
-      - clean
+      - clean:
+          requires:
+            - a
+            - b
+            - c
 
 
 #      - Build

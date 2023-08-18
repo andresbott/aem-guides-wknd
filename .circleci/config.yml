@@ -227,13 +227,13 @@ workflows:
           requires:
             - RDE-reset
 
-      - RDE-install:
+      - RDE-prepare-install:
           requires:
             - Build
             - RDE-prepare
       - RDE-ready:
           requires:
-            - RDE-install
+            - RDE-prepare-install
 
       - Custom-functional-tests:
           requires:

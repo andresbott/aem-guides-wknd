@@ -269,7 +269,7 @@ workflows:
       - c:
           requires:
           - a
-      - clean:
+      - clean
 
 
 

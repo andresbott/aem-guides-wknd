@@ -16,15 +16,23 @@ jobs:
           java-version: 11
           cache: maven
 
-      # Set up dependency cache
-      - name: Cache local Maven repository
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-          restore-keys: |
-            ${{ runner.os }}-maven-          
+#      # Set up dependency cache
+#      - name: Cache local Maven repository
+#        uses: actions/cache@v2
+#        with:
+#          path: ~/.m2/repository
+#          key: maven-${{ hashFiles('**/pom.xml') }}
+#          restore-keys: |
+#            maven-${{ hashFiles('**/pom.xml') }}
 
       # Build & Test
       - name: Build & Test with Maven
-        run: mvn clean install ${{ matrix.profile }}
+        run: mvn clean install
+
+      - name: persist generated artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: maven files
+          path: |
+            all/target/*.zip
+            dispatcher/target/*.zip

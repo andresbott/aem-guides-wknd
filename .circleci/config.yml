@@ -243,6 +243,17 @@ jobs:
             sleep 30
             exit 1
 
+  d:
+    docker:
+      - image: cimg/base:2021.04
+    steps:
+      - checkout
+      - run:
+          name: "Job D"
+          command: |
+            sleep 30
+            
+
   clean:
     docker:
       - image: cimg/base:2021.04
@@ -270,9 +281,10 @@ workflows:
       - c:
           requires:
           - a
-      - clean:
+      - clean
+      - d:
           requires:
-            - c
+            - d
 
 
 

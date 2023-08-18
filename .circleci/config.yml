@@ -270,7 +270,9 @@ workflows:
       - c:
           requires:
           - a
-      - clean
+      - clean:
+          requires:
+            - c
 
 
 

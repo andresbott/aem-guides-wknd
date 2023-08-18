@@ -242,6 +242,6 @@ workflows:
           requires:
             - RDE-ready
       - waiter
-      - Finalize:
+      - Finalize-RDE-reset:
           requires:
             - waiter

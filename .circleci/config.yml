@@ -2,6 +2,32 @@
 # See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 
+commands: # a reusable command with parameters
+  aio-login:
+    steps:
+      - run:
+          name: "aio login"
+          no_output_timeout: 15m
+          command: |
+            echo "${SERVICE_ACCOUNT_PRIVATE_KEY_B64}" | base64 -d > private.key
+            
+            # prevent aio to ask questions
+            aio telemetry off 
+            
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.client_id "${SERVICE_ACCOUNT_CLIENT_ID}"
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.client_secret "${SERVICE_ACCOUNT_CLIENT_SECRET}"
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.technical_account_id "${SERVICE_ACCOUNT_TECH_ACCOUNT_ID}"
+            aio config:set  --json ims.contexts.aio-cli-plugin-cloudmanager.meta_scopes '["ent_cloudmgr_sdk"]'
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.ims_org_id "${SERVICE_ACCOUNT_ORG_ID}"
+            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.private_key  private.key --file
+            
+            aio auth login --ctx=aio-cli-plugin-cloudmanager > login.log
+            
+            # configure coordinates
+            aio config:set cloudmanager_orgid  "${SERVICE_ACCOUNT_ORG_ID}"
+            aio config:set cloudmanager_programid "${PROGRAM_ID}" 
+            aio config:set cloudmanager_environmentid "${ENVIRONMENT_ID}"
+
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
@@ -49,28 +75,7 @@ jobs:
           password: $GH_CONTAINER_RO_EXP_07_24
     steps:
 
-      - run:
-          name: "aio login"
-          no_output_timeout: 15m
-          command: |
-            echo "${SERVICE_ACCOUNT_PRIVATE_KEY_B64}" | base64 -d > private.key
-            
-            # prevent aio to ask questions
-            aio telemetry off 
-            
-            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.client_id "${SERVICE_ACCOUNT_CLIENT_ID}"
-            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.client_secret "${SERVICE_ACCOUNT_CLIENT_SECRET}"
-            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.technical_account_id "${SERVICE_ACCOUNT_TECH_ACCOUNT_ID}"
-            aio config:set  --json ims.contexts.aio-cli-plugin-cloudmanager.meta_scopes '["ent_cloudmgr_sdk"]'
-            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.ims_org_id "${SERVICE_ACCOUNT_ORG_ID}"
-            aio config:set ims.contexts.aio-cli-plugin-cloudmanager.private_key  private.key --file
-            
-            aio auth login --ctx=aio-cli-plugin-cloudmanager > login.log
-            
-            # configure coordinates
-            aio config:set cloudmanager_orgid  "${SERVICE_ACCOUNT_ORG_ID}"
-            aio config:set cloudmanager_programid "${PROGRAM_ID}" 
-            aio config:set cloudmanager_environmentid "${ENVIRONMENT_ID}"
+      - aio-login:
 
       - run:
           name: "reset the RDE"
@@ -118,9 +123,15 @@ jobs:
             aio aem:rde:install -t osgi-config org.apache.sling.jcr.repoinit.RepositoryInitializer~testadmin-user-add.cfg.json
             
             # delete the osgi config, this is fine since the script contained within the config is not reverterd
-            aio aem:rde:delete org.apache.sling.jcr.repoinit.RepositoryInitializer~testadmin-user-add    
-  
-  
+            aio aem:rde:delete org.apache.sling.jcr.repoinit.RepositoryInitializer~testadmin-user-add
+
+      - run:
+          name: "eagerly trigger a RDE reset in case of failure"
+          command: |
+            aio aem:rde:reset & 
+            sleep 5
+          when: on_fail
+
 
   RDE-install:
     docker:
@@ -161,9 +172,13 @@ jobs:
             ALL_FILE=$(ls /tmp/workspace/all/ | grep zip ) && aio aem:rde:install -t content-package "/tmp/workspace/all/${ALL_FILE}"
             DISP_FILE=$(ls /tmp/workspace/dispatcher/ | grep zip ) && aio aem:rde:install -t dispatcher-config "/tmp/workspace/dispatcher/${DISP_FILE}"
 
-            # todo: we can check the status of the installation with "aio aem:rde:status"
-            echo "waiting 3min to finish rde install (the wknd installation restarts AEM)"
-            sleep 180    
+      - run:
+          name: "eagerly trigger a RDE reset in case of failure"
+          command: |
+            aio aem:rde:reset & 
+            sleep 5
+          when: on_fail
+
 
   RDE-ready:
     docker:
@@ -180,8 +195,10 @@ jobs:
 
   Custom-functional-tests:
     docker:
-      # we don't need the image that contains all the tooling to build the java project
-      - image: cimg/openjdk:11.0-node
+      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:8f8fc83b9038
+        auth:
+          username: andresbott
+          password: $GH_CONTAINER_RO_EXP_07_24
     steps:
       - checkout
       - restore_cache:
@@ -201,6 +218,12 @@ jobs:
             -Dit.publish.password="${AEM_PASSWORD}" \
             -Dmaven.javadoc.skip=true \
             -Dmaven.surefire.debug
+      - run:
+          name: "eagerly trigger a RDE reset in case of failure"
+          command: |
+            aio aem:rde:reset & 
+            sleep 5
+          when: on_fail
 
 
   Product-tests:
@@ -251,11 +274,11 @@ workflows:
       - RDE-reset
       - RDE-prepare:
           requires:
-            - Build
             - RDE-reset
 
       - RDE-install:
           requires:
+            - Build
             - RDE-prepare
       - RDE-ready:
           requires:

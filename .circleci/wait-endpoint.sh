@@ -9,8 +9,8 @@
 # Original author: https://gist.github.com/eisenreich/195ab1f05715ec86e300f75d007d711c
 # modified with a timeout of 300s seconds and a retry of ever 10
 
-TIMEOUT=3
-SLEEP=1
+TIMEOUT=300
+SLEEP=15
 
 wait-for-url() {
     echo "Testing: $1"

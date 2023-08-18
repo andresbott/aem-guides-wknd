@@ -48,9 +48,10 @@ jobs:
           username: andresbott
           password: $GH_CONTAINER_RO_EXP_07_24
     steps:
+      - checkout
       - run:
           name: "aio-cli login"
-          command: .circleci/create-user-osgi-cfg.sh
+          command: .circleci/aio_login.sh
       - run:
           name: "reset the RDE"
           no_output_timeout: 15m
@@ -68,7 +69,7 @@ jobs:
       - checkout
       - run:
           name: "aio-cli login"
-          command: .circleci/create-user-osgi-cfg.sh
+          command: .circleci/aio_login.sh
 
       - run:
           name: "setup new admin user on RDE"
@@ -102,7 +103,7 @@ jobs:
 
       - run:
           name: "aio-cli login"
-          command: .circleci/create-user-osgi-cfg.sh
+          command: .circleci/aio_login.sh
 
       - run:
           name: "install project on RDE"

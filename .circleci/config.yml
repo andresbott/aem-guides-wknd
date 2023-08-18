@@ -270,10 +270,7 @@ workflows:
           requires:
           - a
       - clean:
-          requires:
-            - a
-            - b
-            - c
+
 
 
 #      - Build

@@ -71,26 +71,7 @@ jobs:
           name: "aio-cli login"
           command: .circleci/aio_login.sh
 
-      - run:
-          name: "setup new admin user on RDE"
-          command: |
-            # Note: repoinit has some limitations with special characters in password, e.g. "+" sign
-            .circleci/create-user-osgi-cfg.sh -u "${AEM_USER}" -p "${AEM_PASSWORD}" -q true
-            
-            aio aem:rde:install -t osgi-config org.apache.sling.jcr.repoinit.RepositoryInitializer~testadmin-user-add.cfg.json
-            
-            # delete the osgi config, this is fine since the script contained within the config is not reverterd
-            aio aem:rde:delete org.apache.sling.jcr.repoinit.RepositoryInitializer~testadmin-user-add
-
-      - run:
-          name: "eagerly trigger a RDE reset in case of failure"
-          command: |
-            aio aem:rde:reset & 
-            sleep 5
-          when: on_fail
-
-
-  RDE-install:
+  RDE-prepare-install:
     docker:
       - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:8f8fc83b9038
         auth:
@@ -106,18 +87,23 @@ jobs:
           command: .circleci/aio_login.sh
 
       - run:
+          name: "setup new admin user on RDE"
+          command: |
+            # Note: repoinit has some limitations with special characters in password, e.g. "+" sign
+            .circleci/create-user-osgi-cfg.sh -u "${AEM_USER}" -p "${AEM_PASSWORD}" -q true
+            
+            aio aem:rde:install -t osgi-config org.apache.sling.jcr.repoinit.RepositoryInitializer~testadmin-user-add.cfg.json
+            
+            # delete the osgi config, this is fine since the script contained within the config is not reverterd
+            aio aem:rde:delete org.apache.sling.jcr.repoinit.RepositoryInitializer~testadmin-user-add          
+
+      - run:
           name: "install project on RDE"
           command: |
             set -e
             ALL_FILE=$(ls /tmp/workspace/all/ | grep zip ) && aio aem:rde:install -t content-package "/tmp/workspace/all/${ALL_FILE}"
             DISP_FILE=$(ls /tmp/workspace/dispatcher/ | grep zip ) && aio aem:rde:install -t dispatcher-config "/tmp/workspace/dispatcher/${DISP_FILE}"
 
-      - run:
-          name: "eagerly trigger a RDE reset in case of failure"
-          command: |
-            aio aem:rde:reset & 
-            sleep 5
-          when: on_fail
 
   RDE-ready:
     docker:
@@ -158,15 +144,6 @@ jobs:
             -Dmaven.javadoc.skip=true \
             -Dmaven.surefire.debug
 
-      - run:
-          name: "eagerly trigger a RDE reset in case of failure"
-          command: |
-            .circleci/create-user-osgi-cfg.sh
-            aio aem:rde:reset & 
-            sleep 5
-          when: on_fail
-
-
   Product-tests:
     docker:
       - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:8f8fc83b9038
@@ -204,14 +181,6 @@ jobs:
       - store_artifacts:
           path: artifacts
 
-      - run:
-          name: "eagerly trigger a RDE reset in case of failure"
-          command: |
-            .circleci/create-user-osgi-cfg.sh
-            aio aem:rde:reset & 
-            sleep 5
-          when: on_fail
-
   waiter:
     docker:
       - image: cimg/base:2021.04
@@ -227,7 +196,7 @@ jobs:
               done
       - run: echo "All required jobs have now completed"
 
-  Finalize:
+  Finalize-RDE-reset:
     docker:
       - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:8f8fc83b9038
         auth:
@@ -253,7 +222,6 @@ workflows:
     jobs:
 
       - Build
-      - waiter
       - RDE-reset
       - RDE-prepare:
           requires:
@@ -267,13 +235,13 @@ workflows:
           requires:
             - RDE-install
 
-
       - Custom-functional-tests:
           requires:
             - RDE-ready
       - Product-tests:
           requires:
             - RDE-ready
+      - waiter
       - Finalize:
           requires:
             - waiter

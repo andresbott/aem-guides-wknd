@@ -57,7 +57,7 @@ jobs:
           no_output_timeout: 15m
           command: |
             # check if RDE is in clean state:
-            OUT=$(aio aem rde status --json  | jq -e 'select( (.status != "Ready") or (.author.osgiBundles | length>0) or (.author.osgiConfigs | length>0) or (.publish.osgiBundles | length>0) or (.publish.osgiConfigs | length>0) )' | wc -l)
+            OUT=$(aio aem rde status --json  | jq 'select( (.status != "Ready") or (.author.osgiBundles | length>0) or (.author.osgiConfigs | length>0) or (.publish.osgiBundles | length>0) or (.publish.osgiConfigs | length>0) )' | wc -l)
             
             # if the output contains lines, means that the RDE is not in an clean state
             if [ $OUT != 0 ]; then

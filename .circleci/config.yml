@@ -210,7 +210,7 @@ jobs:
       - run:
           name: "Generate the LH payload"
           command: |
-            eaas-next task lh generate -u "${PUBLISH_URL}" -s aem-wknd-adaptto23 \
+            eaas task lh generate -u "${PUBLISH_URL}" -s aem-wknd-adaptto23 \
             -p "/us/en.html" -p "/us/en/magazine.html"
 
       - run:

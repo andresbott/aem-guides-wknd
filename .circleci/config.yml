@@ -189,6 +189,41 @@ jobs:
       - store_artifacts:
           path: artifacts
 
+  LH-tests:
+    docker:
+      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:8f8fc83b9038
+        auth:
+          username: andresbott
+          password: $GH_CONTAINER_RO_EXP_07_24
+    steps:
+      - run:
+          name: "Eaas login"
+          command: |
+            echo "${SERVICE_ACCOUNT_PRIVATE_KEY_B64}" | base64 -d > private.key
+            eaas login integration  \
+              --organization "${SERVICE_ACCOUNT_ORG_ID}" \
+              --clientId "${SERVICE_ACCOUNT_CLIENT_ID}" \
+              --secret "${SERVICE_ACCOUNT_CLIENT_SECRET}" \
+              --privateKey private.key \
+              --accountId "${SERVICE_ACCOUNT_TECH_ACCOUNT_ID}"            
+            eaas health
+      - run:
+          name: "Generate the LH payload"
+          command: |
+            eaas-next task lh generate -u "${PUBLISH_URL}" -s aem-wknd-adaptto23 \
+            -p "/us/en.html" -p "/us/en/magazine.html"
+
+      - run:
+          name: "Run LH performance"
+          no_output_timeout: 15m
+          command: |
+            eaas task lh run lh-task-payload.json
+            mkdir -p lh-reports
+            mv *.json lh-reports
+
+      - store_artifacts:
+          path: lh-reports
+
   Clean:
     docker:
       - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:8f8fc83b9038
@@ -241,6 +276,9 @@ workflows:
           requires:
             - RDE-ready
       - Product-tests:
+          requires:
+            - RDE-ready
+      - LH-tests:
           requires:
             - RDE-ready
       - Clean

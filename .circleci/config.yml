@@ -63,7 +63,7 @@ jobs:
             # if the output contains lines, means that the RDE is not in an clean state
             if [ $OUT != 0 ]; then
               # reset the RDE
-              aio aem:rde:reset
+              aio aem:rde:reset -f
             fi
 
 
@@ -206,7 +206,8 @@ jobs:
           # https://discuss.circleci.com/t/workaround-run-jobs-sequentially-regardless-of-the-outcome-of-the-required-jobs/40807
           name: "wait for end"
           command: |
-            while [[ $(curl --location --request GET "https://circleci.com/api/v2/workflow/$CIRCLE_WORKFLOW_ID/job" | jq -r '.items[]|select(.name != "Clean")|.status' | grep -c -E "running|blocked" ) -gt 0 ]]
+            sleep 60                  
+            while [[ $(curl --location --request GET "https://circleci.com/api/v2/workflow/$CIRCLE_WORKFLOW_ID/job" | jq -r '.items[]|select(.name != "Clean")|.status' | grep -c -E "running" ) -gt 0 ]]
               do
                 sleep 5
               done
@@ -216,7 +217,7 @@ jobs:
           no_output_timeout: 15m
           command: |
             # execute the reset command
-            aio aem:rde:reset & 
+            aio aem:rde:reset -f & 
             sleep 10            
 
 # Invoke jobs via workflows

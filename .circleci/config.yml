@@ -55,7 +55,7 @@ jobs:
           command: .circleci/aio_login.sh
       - run:
           name: "reset the RDE"
-          no_output_timeout: 15m
+          no_output_timeout: 30m
           command: |
             # check if RDE is in clean state:
             OUT=$(aio aem rde status --json  | jq 'select( (.status != "Ready") or (.author.osgiBundles | length>0) or (.author.osgiConfigs | length>0) or (.publish.osgiBundles | length>0) or (.publish.osgiConfigs | length>0) )' | wc -l)

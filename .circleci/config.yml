@@ -63,7 +63,7 @@ jobs:
             # if the output contains lines, means that the RDE is not in an clean state
             if [ $OUT != 0 ]; then
               # reset the RDE
-              aio aem:rde:reset
+              aio aem:rde:reset -f
             fi
 
 
@@ -189,6 +189,41 @@ jobs:
       - store_artifacts:
           path: artifacts
 
+  LH-tests:
+    docker:
+      - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:8f8fc83b9038
+        auth:
+          username: andresbott
+          password: $GH_CONTAINER_RO_EXP_07_24
+    steps:
+      - run:
+          name: "Eaas login"
+          command: |
+            echo "${SERVICE_ACCOUNT_PRIVATE_KEY_B64}" | base64 -d > private.key
+            eaas login integration  \
+              --organization "${SERVICE_ACCOUNT_ORG_ID}" \
+              --clientId "${SERVICE_ACCOUNT_CLIENT_ID}" \
+              --secret "${SERVICE_ACCOUNT_CLIENT_SECRET}" \
+              --privateKey private.key \
+              --accountId "${SERVICE_ACCOUNT_TECH_ACCOUNT_ID}"            
+            eaas health
+      - run:
+          name: "Generate the LH payload"
+          command: |
+            eaas task lh generate -u "${PUBLISH_URL}" -s aem-wknd-adaptto23 \
+            -p "/us/en.html" -p "/us/en/magazine.html"
+
+      - run:
+          name: "Run LH performance"
+          no_output_timeout: 15m
+          command: |
+            eaas task lh run lh-task-payload.json
+            mkdir -p lh-reports
+            mv *.json lh-reports
+
+      - store_artifacts:
+          path: lh-reports
+
   Clean:
     docker:
       - image: ghcr.io/andresbott/aem-guides-wknd/ci-image:8f8fc83b9038
@@ -206,7 +241,8 @@ jobs:
           # https://discuss.circleci.com/t/workaround-run-jobs-sequentially-regardless-of-the-outcome-of-the-required-jobs/40807
           name: "wait for end"
           command: |
-            while [[ $(curl --location --request GET "https://circleci.com/api/v2/workflow/$CIRCLE_WORKFLOW_ID/job" | jq -r '.items[]|select(.name != "Clean")|.status' | grep -c -E "running|blocked" ) -gt 0 ]]
+            sleep 60                  
+            while [[ $(curl --location --request GET "https://circleci.com/api/v2/workflow/$CIRCLE_WORKFLOW_ID/job" | jq -r '.items[]|select(.name != "Clean")|.status' | grep -c -E "running" ) -gt 0 ]]
               do
                 sleep 5
               done
@@ -216,7 +252,7 @@ jobs:
           no_output_timeout: 15m
           command: |
             # execute the reset command
-            aio aem:rde:reset & 
+            aio aem:rde:reset -f & 
             sleep 10            
 
 # Invoke jobs via workflows
@@ -240,6 +276,9 @@ workflows:
           requires:
             - RDE-ready
       - Product-tests:
+          requires:
+            - RDE-ready
+      - LH-tests:
           requires:
             - RDE-ready
       - Clean

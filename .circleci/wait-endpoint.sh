@@ -8,14 +8,14 @@
 
 
 wait_for_page() {
-    echo "Testing: \"$1\" for title \"$2\" with a timeout of $3s"
+    echo "Testing: \"$1\" for \"$2\" in the title, with a timeout of $3s"
 
     r=$(curl -s -L "${1}" | grep \<title\> | xargs | sed s/"<title>"// | sed s/"<\/title>"//)
     echo "$r"
 
     timeout --foreground -s TERM "${3}s" bash -c \
         'while [[ "$(curl -s -L "${0}" | grep \<title\> | xargs | sed s/"<title>"// | sed s/"<\/title>"//)" != *"${1}"* ]];\
-        do echo "Waiting ${0} for title ${1} " && sleep ${2};\
+        do echo "Waiting ${0} for ${1} in the title" && sleep ${2};\
         done' "${1}" "${2}" "${4}"
 
     local TIMEOUT_RETURN="$?"
